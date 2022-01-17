@@ -1,32 +1,77 @@
 import '@logseq/libs';
 
-const repeat = (str: string, times: number) => {
-  return [...Array(times).keys()].reduce(prev => { return prev + str; }, '');
+const settingsVersion = 'v1';
+export const defaultSettings = {
+  keyBindings: {
+    1: 'ctrl+1',
+    2: 'ctrl+2',
+    3: 'ctrl+3',
+    4: 'ctrl+4',
+    5: 'ctrl+5',
+    6: 'ctrl+6',
+    0: 'ctrl+0',
+  },
+  tasks: ['TODO', 'DOING', 'DONE', 'LATER', 'NOW', 'WAITING'],
+  settingsVersion,
+  disabled: false,
 };
 
-async function setLevel(level: number) {
-  const block = await logseq.Editor.getCurrentBlock();
-    if (block?.uuid) {
-      let content = /^#{1,6}\s+/.test(block.content) ? block.content.replace(/^#{1,6}\s+/, '') : block.content;
-      if (level > 0) {
-        await logseq.Editor.updateBlock(block.uuid, repeat('#', level) + ' ' + content);
-      } else {
-        await logseq.Editor.updateBlock(block.uuid, content);
-      }
-    }
-}
+export type DefaultSettingsType = typeof defaultSettings;
+
+const initSettings = () => {
+  let settings = logseq.settings;
+
+  const shouldUpdateSettings = !settings || settings.settingsVersion != defaultSettings.settingsVersion;
+
+  if (shouldUpdateSettings) {
+    settings = defaultSettings;
+    logseq.updateSettings(settings);
+  }
+};
+
+const getSettings = (key: string | undefined, defaultValue: any = undefined) => {
+  let settings = logseq.settings;
+  const merged = Object.assign(defaultSettings, settings);
+  return key
+    ? merged[key]
+      ? merged[key]
+      : defaultValue
+    : merged;
+};
 
 async function main() {
-  for (let level of [0, 1, 2, 3, 4, 5, 6]) {
+  // settings
+  initSettings();
+
+  const keyBindings = getSettings('keyBindings', {});
+  const tasks = getSettings('tasks', []);
+
+  async function setTask(taskBindedId: number) {
+    if (tasks.length < taskBindedId) {
+      return;
+    }
+    const block = await logseq.Editor.getCurrentBlock();
+      if (block?.uuid) {
+        const regx = new RegExp(`^${tasks.join('|')}`, 'gm');
+        let content = regx.test(block.content) ? block.content.replace(regx, '').trimStart() : block.content;
+        if (taskBindedId > 0) {
+          await logseq.Editor.updateBlock(block.uuid, tasks[taskBindedId - 1] + ' ' + content);
+        } else {
+          await logseq.Editor.updateBlock(block.uuid, content);
+        }
+      }
+  }
+
+  for (let taskBindedId of [...new Array(tasks.length + 1).keys()]) {
     logseq.App.registerCommandPalette({
-      key: `heading-level-shortcuts-h${level}`,
-      label: `Set block to heading level ${level}`,
+      key: `task-management-shortcuts-task-${taskBindedId}`,
+      label: `Set block to task ${taskBindedId}`,
       keybinding: {
         mode: 'global',
-        binding: 'mod+' + level
+        binding: keyBindings[taskBindedId] || 'ctrl+' + taskBindedId,
       }
     }, async () => {
-      await setLevel(level);
+      await setTask(taskBindedId);
     });
   }
 }
