@@ -21,7 +21,8 @@ export type DefaultSettingsType = typeof defaultSettings;
 const initSettings = () => {
   let settings = logseq.settings;
 
-  const shouldUpdateSettings = !settings || settings.settingsVersion != defaultSettings.settingsVersion;
+  const shouldUpdateSettings =
+    !settings || settings.settingsVersion != defaultSettings.settingsVersion;
 
   if (shouldUpdateSettings) {
     settings = defaultSettings;
@@ -29,14 +30,13 @@ const initSettings = () => {
   }
 };
 
-const getSettings = (key: string | undefined, defaultValue: any = undefined) => {
+const getSettings = (
+  key: string | undefined,
+  defaultValue: any = undefined
+) => {
   let settings = logseq.settings;
   const merged = Object.assign(defaultSettings, settings);
-  return key
-    ? merged[key]
-      ? merged[key]
-      : defaultValue
-    : merged;
+  return key ? (merged[key] ? merged[key] : defaultValue) : merged;
 };
 
 async function main() {
@@ -50,29 +50,58 @@ async function main() {
     if (tasks.length < taskBindedId) {
       return;
     }
-    const block = await logseq.Editor.getCurrentBlock();
+
+    const selected = await logseq.Editor.getSelectedBlocks();
+    if (selected && selected?.length > 1) {
+      for (let block of selected) {
+        if (block?.uuid) {
+          const regx = new RegExp(`^${tasks.join('|')}`, 'gm');
+          let content = regx.test(block.content)
+            ? block.content.replace(regx, '').trimStart()
+            : block.content;
+          if (taskBindedId > 0) {
+            await logseq.Editor.updateBlock(
+              block.uuid,
+              tasks[taskBindedId - 1] + ' ' + content
+            );
+          } else {
+            await logseq.Editor.updateBlock(block.uuid, content);
+          }
+        }
+      }
+    } else {
+      const block = await logseq.Editor.getCurrentBlock();
       if (block?.uuid) {
         const regx = new RegExp(`^${tasks.join('|')}`, 'gm');
-        let content = regx.test(block.content) ? block.content.replace(regx, '').trimStart() : block.content;
+        let content = regx.test(block.content)
+          ? block.content.replace(regx, '').trimStart()
+          : block.content;
         if (taskBindedId > 0) {
-          await logseq.Editor.updateBlock(block.uuid, tasks[taskBindedId - 1] + ' ' + content);
+          await logseq.Editor.updateBlock(
+            block.uuid,
+            tasks[taskBindedId - 1] + ' ' + content
+          );
         } else {
           await logseq.Editor.updateBlock(block.uuid, content);
         }
       }
+    }
   }
 
   for (let taskBindedId of [...new Array(tasks.length + 1).keys()]) {
-    logseq.App.registerCommandPalette({
-      key: `task-management-shortcuts-task-${taskBindedId}`,
-      label: `Set block to task ${taskBindedId}`,
-      keybinding: {
-        mode: 'global',
-        binding: keyBindings[taskBindedId] || 'ctrl+' + taskBindedId,
+    logseq.App.registerCommandPalette(
+      {
+        key: `task-management-shortcuts-task-${taskBindedId}`,
+        label: `Set block to task ${taskBindedId}`,
+        keybinding: {
+          mode: 'global',
+          binding: keyBindings[taskBindedId] || 'ctrl+' + taskBindedId,
+        },
+      },
+      async () => {
+        await setTask(taskBindedId);
       }
-    }, async () => {
-      await setTask(taskBindedId);
-    });
+    );
   }
 }
 
