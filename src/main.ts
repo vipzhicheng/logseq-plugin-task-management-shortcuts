@@ -9,7 +9,7 @@ export const defaultSettings = {
     4: 'ctrl+4',
     5: 'ctrl+5',
     6: 'ctrl+6',
-    6: 'ctrl+7',
+    7: 'ctrl+7',
     0: 'ctrl+0',
   },
   tasks: ['TODO', 'DOING', 'DONE', 'LATER', 'NOW', 'WAITING', 'CANCELLED'],
