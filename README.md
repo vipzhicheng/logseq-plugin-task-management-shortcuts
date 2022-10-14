@@ -34,6 +34,7 @@ Add shortcuts for Logseq task management, mainly borrowed from [Heading Level Sh
 * `ctrl+4`: Change to `LATER` task.
 * `ctrl+5`: Change to `NOW` task.
 * `ctrl+6`: Change to `WAITING` task.
+* `ctrl+7`: Change to `CANCELLED` task.
 * `ctrl+0`: Change to non-task.
 
 ## Customization
@@ -53,6 +54,7 @@ The default config seems like below.
     "4": "ctrl+4",
     "5": "ctrl+5",
     "6": "ctrl+6"
+    "7": "ctrl+7"
   },
   "tasks": [
     "TODO",
@@ -60,7 +62,8 @@ The default config seems like below.
     "DONE",
     "LATER",
     "NOW",
-    "WAITING"
+    "WAITING",
+    "CANCELLED"
   ],
   "settingsVersion": "v1"
 }

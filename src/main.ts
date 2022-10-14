@@ -1,6 +1,6 @@
 import '@logseq/libs';
 
-const settingsVersion = 'v1';
+const settingsVersion = 'v2';
 export const defaultSettings = {
   keyBindings: {
     1: 'ctrl+1',
