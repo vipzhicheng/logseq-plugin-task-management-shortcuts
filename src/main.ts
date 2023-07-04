@@ -56,7 +56,7 @@ async function main() {
     if (selected && selected?.length > 1) {
       for (let block of selected) {
         if (block?.uuid) {
-          const regx = new RegExp(`^(${tasks.join('|')})`, 'gm');
+          const regx = new RegExp(`^(${tasks.join('|')}) `, 'gm');
           let content = regx.test(block.content)
             ? block.content.replace(regx, '').trimStart()
             : block.content;
@@ -73,7 +73,7 @@ async function main() {
     } else {
       const block = await logseq.Editor.getCurrentBlock();
       if (block?.uuid) {
-        const regx = new RegExp(`^(${tasks.join('|')})`, 'gm');
+        const regx = new RegExp(`^(${tasks.join('|')}) `, 'gm');
         let content = regx.test(block.content)
           ? block.content.replace(regx, '').trimStart()
           : block.content;
